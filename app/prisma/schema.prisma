@@ -1,0 +1,183 @@
+// This is your Prisma schema file for the 8x Creative AI Platform
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  credits   Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creations          Creation[]
+  creditTransactions CreditTransaction[]
+  otps               OTP[]
+
+  @@map("users")
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
+
+  @@index([email])
+  @@index([code])
+  @@map("otps")
+}
+
+model ModelConfig {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String   @map("display_name")
+  type        String   // "image" | "video" | "enhance"
+  provider    String   // "pollinations" | "future_provider"
+  creditCost  Int      @map("credit_cost")
+  config      Json     @default("{}") // Provider-specific config: { model, width, height, defaults... }
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creations  Creation[]
+  revisions  Revision[]
+
+  @@index([type])
+  @@index([active])
+  @@map("model_configs")
+}
+
+model SystemPrompt {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String   @map("display_name")
+  type        String   // "image" | "video" | "enhance"
+  prompt      String   @db.Text
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([type])
+  @@index([active])
+  @@map("system_prompts")
+}
+
+model Creation {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   // "image" | "video"
+  prompt    String   @db.Text
+  negativePrompt String? @map("negative_prompt")
+  status    String   @default("pending") // "pending" | "processing" | "completed" | "failed"
+  resultUrl String?  @map("result_url")
+  creditsUsed Int    @map("credits_used")
+  metadata  Json     @default("{}") // { width, height, seed, duration, fps, etc. }
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  model      ModelConfig @relation(fields: [modelId], references: [id])
+  modelId    String      @map("model_id")
+  revisions  Revision[]
+  enhancements Enhancement[]
+  creditTransactions CreditTransaction[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("creations")
+}
+
+model Revision {
+  id        String   @id @default(cuid())
+  creationId String  @map("creation_id")
+  prompt    String   @db.Text
+  negativePrompt String? @map("negative_prompt")
+  status    String   @default("pending") // "pending" | "processing" | "completed" | "failed"
+  resultUrl String?  @map("result_url")
+  creditsUsed Int    @map("credits_used")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creation  Creation    @relation(fields: [creationId], references: [id], onDelete: Cascade)
+  model     ModelConfig @relation(fields: [modelId], references: [id])
+  modelId   String      @map("model_id")
+  creditTransactions CreditTransaction[]
+
+  @@index([creationId])
+  @@index([status])
+  @@map("revisions")
+}
+
+model Enhancement {
+  id        String   @id @default(cuid())
+  creationId String  @map("creation_id")
+  type      String   // "upscale" | "denoise" | "restore" | "style_transfer"
+  status    String   @default("pending")
+  resultUrl String?  @map("result_url")
+  creditsUsed Int    @map("credits_used")
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  creation  Creation @relation(fields: [creationId], references: [id], onDelete: Cascade)
+  creditTransactions CreditTransaction[]
+
+  @@index([creationId])
+  @@map("enhancements")
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  amount      Int      // Negative for deductions, positive for top-ups/refunds
+  type        String   // "creation" | "revision" | "enhancement" | "topup" | "refund" | "signup_bonus"
+  description String?
+  creationId  String?  @map("creation_id")
+  revisionId  String?  @map("revision_id")
+  enhancementId String? @map("enhancement_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creation     Creation?    @relation(fields: [creationId], references: [id], onDelete: SetNull)
+  revision     Revision?    @relation(fields: [revisionId], references: [id], onDelete: SetNull)
+  enhancement  Enhancement? @relation(fields: [enhancementId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("credit_transactions")
+}
+
+model GlobalConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("global_config")
+}
