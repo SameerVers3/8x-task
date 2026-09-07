@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "blue-laser-clean-glass-layout": {
+      "source": "mengto/skills",
+      "sourceType": "github",
+      "skillPath": "agent-skills/web-design/blue-laser-clean-glass-layout/SKILL.md",
+      "computedHash": "6eb2bfd7ff01ba325c75e8315e271365c7f54f0957a67f1281ad9e99a6bafcc2"
+    },
+    "glass-dark-ui": {
+      "source": "mengto/skills",
+      "sourceType": "github",
+      "skillPath": "agent-skills/web-design/glass-dark-ui/SKILL.md",
+      "computedHash": "bf5293a453e98fec694d51226e4f54d3f84ec8038088462a41981f2bfa14a8a4"
+    }
+  }
+}
