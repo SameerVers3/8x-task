@@ -2,14 +2,12 @@
 
 import { AppShell } from "./components/app-shell";
 import { HeroSection } from "./sections/hero";
-import { TrustBar } from "./sections/trust-bar";
 import { FeatureShowcase } from "./sections/feature-showcase";
 import { GalleryMasonry } from "./sections/gallery-masonry";
 import { VideoGallery } from "./sections/video-gallery";
 import { AlternatingFeatures } from "./sections/alternating-features";
 import { ModelGrid } from "./sections/model-grid";
 import { PricingSection } from "./sections/pricing-section";
-import { Testimonials } from "./sections/testimonials";
 import { FaqSection } from "./sections/faq";
 import { CtaBanner } from "./sections/cta-banner";
 
@@ -18,14 +16,12 @@ export default function Home() {
     <AppShell>
       <div className="flex flex-col">
         <HeroSection />
-        <TrustBar />
         <FeatureShowcase />
         <GalleryMasonry />
         <VideoGallery />
         <AlternatingFeatures />
         <ModelGrid />
         <PricingSection />
-        <Testimonials />
         <FaqSection />
         <CtaBanner />
       </div>

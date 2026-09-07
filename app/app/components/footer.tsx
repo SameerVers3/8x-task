@@ -76,32 +76,40 @@ export function Footer() {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className="relative mt-auto overflow-hidden border-t border-[var(--border-subtle)]"
-      style={{ background: "var(--bg-elevated)" }}
+      className="relative mt-auto overflow-hidden border-t border-[var(--border-strong)]"
+      style={{
+        background: "linear-gradient(180deg, var(--bg-elevated) 0%, var(--theme-surface) 100%)",
+      }}
     >
-      {/* Big Background Text */}
+      {/* Big Background Text — more prominent */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
         <span
-          className="select-none whitespace-nowrap text-[12vw] font-bold leading-none tracking-tighter text-[var(--text-primary)]/[0.02]"
+          className="select-none whitespace-nowrap text-[12vw] font-bold leading-none tracking-tighter text-[var(--text-primary)]/[0.06]"
           style={{ fontFamily: "var(--theme-font), system-ui, sans-serif" }}
         >
           FLUID THOUGHTS
         </span>
       </div>
 
-      <div className="relative mx-auto max-w-[1280px] px-6 py-16 md:px-16">
+      {/* Accent top line */}
+      <div
+        className="absolute inset-x-0 top-0 h-[2px]"
+        style={{ background: "var(--accent-gradient)" }}
+      />
+
+      <div className="relative mx-auto max-w-[1280px] px-6 py-20 md:px-16 md:py-24">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
+              <span className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
                 Fluid
               </span>
             </Link>
             <p className="text-sm leading-relaxed text-[var(--text-secondary)] max-w-xs">
               Transform your imagination into reality. No expertise needed.
             </p>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-5 flex gap-3">
               {socials.map((s) => {
                 const Icon = s.icon;
                 return (
@@ -110,7 +118,7 @@ export function Footer() {
                     href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] text-[var(--text-tertiary)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-strong)] text-[var(--text-tertiary)] transition-colors hover:border-[var(--accent-solid)] hover:text-[var(--accent-solid)]"
                     aria-label={s.label}
                   >
                     <Icon className="h-4 w-4" />
@@ -126,7 +134,7 @@ export function Footer() {
               <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
                 {group.title}
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.href}>
                     <Link
@@ -142,7 +150,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-8 sm:flex-row">
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-8 sm:flex-row">
           <p className="text-[0.8125rem] text-[var(--text-tertiary)]">
             &copy; {new Date().getFullYear()} Fluid. All rights reserved.
           </p>

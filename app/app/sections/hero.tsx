@@ -9,8 +9,6 @@ import {
   Wand2,
   ImageIcon,
   ChevronRight,
-  Pause,
-  Play,
   Clapperboard,
 } from "lucide-react";
 
@@ -45,7 +43,6 @@ const HERO_BACKGROUNDS = [
 
 function HeroBackground() {
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const next = useCallback(() => {
@@ -53,24 +50,19 @@ function HeroBackground() {
   }, []);
 
   useEffect(() => {
-    if (paused) return;
     const id = setInterval(next, 6000);
     return () => clearInterval(id);
-  }, [paused, next]);
+  }, [next]);
 
   useEffect(() => {
     const bg = HERO_BACKGROUNDS[active];
     if (bg.type === "video" && videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {});
     }
   }, [active]);
 
   return (
-    <div
-      className="absolute inset-0"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <div className="absolute inset-0">
       {/* Backgrounds */}
       {HERO_BACKGROUNDS.map((bg, i) => (
         <AnimatePresence key={i} mode="popLayout">
@@ -117,15 +109,6 @@ function HeroBackground() {
             "linear-gradient(to top, rgba(3,3,4,0.95) 0%, rgba(3,3,4,0.45) 40%, rgba(3,3,4,0.75) 100%)",
         }}
       />
-
-      {/* Pause button */}
-      <button
-        onClick={() => setPaused((p) => !p)}
-        className="absolute bottom-6 right-6 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-sm hover:bg-white/20 hover:text-white transition-colors"
-        aria-label={paused ? "Resume slideshow" : "Pause slideshow"}
-      >
-        {paused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
-      </button>
 
       {/* Dots */}
       <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2">
@@ -204,17 +187,17 @@ function FloatingGenerationBar() {
 
 export function HeroSection() {
   return (
-    <section className="relative -mt-20 min-h-[90dvh] overflow-hidden" style={{ minHeight: "640px" }}>
+    <section className="relative -mt-20 h-[100dvh] overflow-hidden">
       <HeroBackground />
 
       {/* Foreground content */}
-      <div className="relative z-10 flex h-full min-h-[90dvh] flex-col justify-end px-6 pb-24 pt-20 md:px-16 md:pb-32">
+      <div className="relative z-10 flex h-[100dvh] flex-col items-center justify-end px-6 pb-24 pt-20 text-center md:px-16 md:pb-32">
         <div className="mx-auto w-full max-w-[1440px]">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-5"
+            className="mb-5 flex justify-center"
           >
             <span
               className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-[var(--accent-solid)]"
@@ -232,7 +215,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[var(--text-primary)]"
+            className="mx-auto max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-[-0.03em] text-[var(--text-primary)]"
           >
             Create anything
             <br />
@@ -243,7 +226,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-5 max-w-[48ch] text-base leading-[1.6] text-[var(--text-secondary)] md:text-lg"
+            className="mx-auto mt-5 max-w-[48ch] text-base leading-[1.6] text-[var(--text-secondary)] md:text-lg"
           >
             Transform text into stunning images and videos in seconds. No expertise needed.
             Just describe your vision and let Fluid bring it to life.
@@ -253,7 +236,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 flex flex-wrap items-center gap-3"
+            className="mt-8 flex flex-wrap items-center justify-center gap-3"
           >
             <Link
               href="/generate"
@@ -277,7 +260,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-12"
+            className="mt-12 flex justify-center"
           >
             <FloatingGenerationBar />
           </motion.div>
