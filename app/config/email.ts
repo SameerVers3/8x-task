@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendOTP(email: string, code: string): Promise<void> {
-  const appName = process.env.APP_NAME || "8x Creative AI";
+  const appName = process.env.APP_NAME || "Fluid";
 
   await transporter.sendMail({
     from: `"${appName}" <${process.env.SMTP_USER}>`,

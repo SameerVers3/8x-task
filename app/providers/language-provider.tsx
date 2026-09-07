@@ -515,13 +515,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>("en");
 
   useEffect(() => {
-    const saved = localStorage.getItem("8x-lang") as Language | null;
+    const saved = localStorage.getItem("fluid-lang") as Language | null;
     if (saved && translations[saved]) setLangState(saved);
   }, []);
 
   const setLang = (l: Language) => {
     setLangState(l);
-    localStorage.setItem("8x-lang", l);
+    localStorage.setItem("fluid-lang", l);
     document.documentElement.lang = l;
   };
 

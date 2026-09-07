@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("8x-theme");
+    const saved = localStorage.getItem("fluid-theme");
     if (saved) {
       const t = getThemeById(saved);
       setThemeState(t);
@@ -43,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const t = getThemeById(id);
     setThemeState(t);
     applyThemeToCSS(t);
-    localStorage.setItem("8x-theme", id);
+    localStorage.setItem("fluid-theme", id);
   };
 
   return (

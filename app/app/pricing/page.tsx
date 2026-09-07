@@ -21,7 +21,7 @@ const plans = [
     icon: Sparkles,
     price: 0,
     credits: 50,
-    description: "Perfect for trying out 8x",
+    description: "Perfect for trying out Fluid",
     features: [
       "50 free credits on signup",
       "Standard quality images",

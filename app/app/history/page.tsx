@@ -7,18 +7,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ImageIcon,
   VideoIcon,
-  Clock,
   CheckCircle2,
   XCircle,
   Loader2,
-  RefreshCw,
-  ArrowRight,
   Wand2,
   Filter,
   Search,
-  Trash2,
-  Eye,
   Maximize2,
+  ArrowRight,
+  LogIn,
 } from "lucide-react";
 import { AppShell } from "../components/app-shell";
 import { useAuth } from "@/providers/auth-provider";
@@ -39,7 +36,7 @@ interface Creation {
 }
 
 export default function HistoryPage() {
-  const { user } = useAuth();
+  const { user, isLoading, setIsAuthModalOpen } = useAuth();
   const { t } = useLanguage();
   const [creations, setCreations] = useState<Creation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +45,10 @@ export default function HistoryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const fetchCreations = async () => {
       try {
         const res = await fetch("/api/creations", { credentials: "include" });
@@ -60,7 +61,7 @@ export default function HistoryPage() {
       }
     };
     fetchCreations();
-  }, []);
+  }, [user]);
 
   const filtered = creations
     .filter((c) => (filter === "all" ? true : c.type === filter))
@@ -80,11 +81,49 @@ export default function HistoryPage() {
       case "pending":
         return <Loader2 className="h-4 w-4 animate-spin text-[var(--theme-warning)]" />;
       default:
-        return <Clock className="h-4 w-4 text-[var(--theme-fg-subtle)]" />;
+        return null;
     }
   };
 
   const selected = selectedId ? creations.find((c) => c.id === selectedId) : null;
+
+  // Auth wall
+  if (!isLoading && !user) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-2xl px-4 py-24 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-12"
+          >
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--theme-accent-muted)] text-[var(--theme-accent)]">
+              <Wand2 className="h-8 w-8" />
+            </div>
+            <h2 className="text-2xl font-bold">Sign in to view your history</h2>
+            <p className="mt-2 text-[var(--theme-fg-muted)]">
+              Track your creations, credits, and revisit your past work anytime.
+            </p>
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--theme-accent)] px-6 py-3 text-sm font-medium text-white shadow-[var(--theme-shadow-glow)] hover:bg-[var(--theme-accent-hover)] transition-all"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </button>
+              <Link
+                href="/generate"
+                className="text-sm text-[var(--theme-accent)] hover:underline"
+              >
+                Or start creating without an account
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (loading) {
     return (
@@ -189,7 +228,6 @@ export default function HistoryPage() {
                 className="group relative rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] overflow-hidden cursor-pointer hover:border-[var(--theme-accent)]/30 transition-colors"
                 onClick={() => setSelectedId(c.id)}
               >
-                {/* Thumbnail */}
                 <div className="relative aspect-square bg-[var(--theme-bg-elevated)]">
                   {c.resultUrl && c.status === "completed" ? (
                     <Image
@@ -208,24 +246,14 @@ export default function HistoryPage() {
                       )}
                     </div>
                   )}
-
-                  {/* Type badge */}
                   <div className="absolute top-3 left-3 flex h-6 items-center gap-1 rounded-md bg-[var(--theme-bg-glass)] px-2 text-xs font-medium text-[var(--theme-fg)] backdrop-blur-sm">
-                    {c.type === "image" ? (
-                      <ImageIcon className="h-3 w-3" />
-                    ) : (
-                      <VideoIcon className="h-3 w-3" />
-                    )}
+                    {c.type === "image" ? <ImageIcon className="h-3 w-3" /> : <VideoIcon className="h-3 w-3" />}
                     {c.type}
                   </div>
-
-                  {/* Status */}
                   <div className="absolute top-3 right-3 flex h-6 items-center gap-1 rounded-md bg-[var(--theme-bg-glass)] px-2 text-xs font-medium text-[var(--theme-fg)] backdrop-blur-sm">
                     {statusIcon(c.status)}
                   </div>
                 </div>
-
-                {/* Info */}
                 <div className="p-4">
                   <p className="line-clamp-2 text-sm font-medium text-[var(--theme-fg)]">
                     {c.prompt}
@@ -258,7 +286,6 @@ export default function HistoryPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-2xl rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] overflow-hidden shadow-2xl"
             >
-              {/* Media */}
               <div className="relative aspect-video bg-[var(--theme-bg-elevated)] flex items-center justify-center">
                 {selected.resultUrl && selected.status === "completed" ? (
                   <Image
@@ -275,27 +302,22 @@ export default function HistoryPage() {
                   </div>
                 )}
               </div>
-
-              {/* Details */}
               <div className="p-6 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="font-semibold text-lg">{selected.model?.displayName || selected.model?.name}</h3>
                     <p className="text-sm text-[var(--theme-fg-muted)] mt-1">{selected.prompt}</p>
                   </div>
-                  <div className="flex gap-2">
-                    {selected.resultUrl && (
-                      <a
-                        href={selected.resultUrl}
-                        download
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--theme-surface)] border border-[var(--theme-border)] text-[var(--theme-fg-muted)] hover:text-[var(--theme-fg)] transition-colors"
-                      >
-                        <Maximize2 className="h-4 w-4" />
-                      </a>
-                    )}
-                  </div>
+                  {selected.resultUrl && (
+                    <a
+                      href={selected.resultUrl}
+                      download
+                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--theme-surface)] border border-[var(--theme-border)] text-[var(--theme-fg-muted)] hover:text-[var(--theme-fg)] transition-colors"
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </a>
+                  )}
                 </div>
-
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] p-3">
                     <p className="text-xs text-[var(--theme-fg-subtle)] uppercase tracking-wider">Type</p>
@@ -310,7 +332,6 @@ export default function HistoryPage() {
                     <p className="font-medium mt-1">{new Date(selected.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSelectedId(null)}

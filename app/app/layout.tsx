@@ -10,15 +10,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "8x Creative AI - Generate Stunning Art",
+  title: "Fluid — Create anything you imagine",
   description:
-    "Create breathtaking images and videos with AI. No expertise needed. Powered by 8x.",
+    "Create breathtaking images and videos with AI. No expertise needed. Powered by Fluid.",
   keywords: [
     "AI art",
     "image generation",
     "video generation",
     "AI creative",
-    "8x",
+    "Fluid",
   ],
 };
 
