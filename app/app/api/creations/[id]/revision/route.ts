@@ -87,8 +87,8 @@ export async function POST(
         metadata: {
           originalPrompt: prompt,
           systemPromptId: systemPromptId || null,
-          width: width || model.config?.width || 1024,
-          height: height || model.config?.height || 1024,
+          width: width || (model.config as any)?.width || 1024,
+          height: height || (model.config as any)?.height || 1024,
           seed,
           nologo,
           parentCreationId: creationId,
@@ -121,8 +121,8 @@ export async function POST(
         if (model.type === "image") {
           result = await generateImage({
             prompt: finalPrompt,
-            width: width || model.config?.width || 1024,
-            height: height || model.config?.height || 1024,
+            width: width || (model.config as any)?.width || 1024,
+            height: height || (model.config as any)?.height || 1024,
             seed,
             negative_prompt: negativePrompt,
             nologo,
@@ -131,8 +131,8 @@ export async function POST(
         } else if (model.type === "video") {
           result = await generateVideo({
             prompt: finalPrompt,
-            width: width || model.config?.width || 512,
-            height: height || model.config?.height || 512,
+            width: width || (model.config as any)?.width || 512,
+            height: height || (model.config as any)?.height || 512,
             model: model.name,
           });
         } else {
@@ -146,7 +146,7 @@ export async function POST(
               status: "completed",
               resultUrl: result.data.image_url || result.data.video_url || null,
               metadata: {
-                ...revision.metadata,
+                ...(revision.metadata as any),
                 inferenceResponse: result,
               },
             },
@@ -157,7 +157,7 @@ export async function POST(
             data: {
               status: "failed",
               metadata: {
-                ...revision.metadata,
+                ...(revision.metadata as any),
                 error: result.error || "Generation failed",
               },
             },
@@ -187,7 +187,7 @@ export async function POST(
           data: {
             status: "failed",
             metadata: {
-              ...revision.metadata,
+              ...(revision.metadata as any),
               error: error instanceof Error ? error.message : "Unknown error",
             },
           },
@@ -227,7 +227,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: error.errors[0].message },
+        { success: false, error: error.issues[0].message },
         { status: 400 }
       );
     }

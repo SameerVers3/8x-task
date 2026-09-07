@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ success: false, error: error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ success: false, error: error.issues[0].message }, { status: 400 });
     }
     console.error("Admin create prompt error:", error);
     return NextResponse.json({ success: false, error: "Failed to create prompt" }, { status: 500 });

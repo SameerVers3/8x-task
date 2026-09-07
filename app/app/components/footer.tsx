@@ -4,10 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Sparkles,
-  Twitter,
-  Github,
-  Instagram,
-  Youtube,
+  MessageCircle,
+  Code2,
+  Camera,
+  Play,
   Mail,
   Heart,
 } from "lucide-react";
@@ -40,10 +40,10 @@ const footerLinks = [
 ];
 
 const socials = [
-  { icon: Twitter, href: "https://twitter.com/8xai", label: "Twitter" },
-  { icon: Github, href: "https://github.com/8xai", label: "GitHub" },
-  { icon: Instagram, href: "https://instagram.com/8xai", label: "Instagram" },
-  { icon: Youtube, href: "https://youtube.com/@8xai", label: "YouTube" },
+  { icon: MessageCircle, href: "https://twitter.com/8xai", label: "Twitter" },
+  { icon: Code2, href: "https://github.com/8xai", label: "GitHub" },
+  { icon: Camera, href: "https://instagram.com/8xai", label: "Instagram" },
+  { icon: Play, href: "https://youtube.com/@8xai", label: "YouTube" },
 ];
 
 export function Footer() {

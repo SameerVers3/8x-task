@@ -14,6 +14,7 @@ interface User {
   name: string | null;
   avatar: string | null;
   credits: number;
+  createdAt: string;
 }
 
 interface AuthContextType {

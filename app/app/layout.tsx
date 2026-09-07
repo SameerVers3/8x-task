@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ProvidersWrapper } from "./components/providers-wrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,7 +38,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh flex flex-col bg-[var(--theme-bg)] text-[var(--theme-fg)] transition-colors duration-300">
-        {children}
+        <ProvidersWrapper>{children}</ProvidersWrapper>
       </body>
     </html>
   );

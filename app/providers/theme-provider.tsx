@@ -16,6 +16,7 @@ import {
 
 interface ThemeContextType {
   theme: ThemePreset;
+  currentTheme: string;
   setTheme: (id: string) => void;
   isReady: boolean;
 }
@@ -46,7 +47,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, isReady }}>
+    <ThemeContext.Provider value={{ theme, currentTheme: theme.id, setTheme, isReady }}>
       {children}
     </ThemeContext.Provider>
   );

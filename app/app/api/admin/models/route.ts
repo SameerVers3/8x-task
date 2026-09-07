@@ -9,7 +9,7 @@ const modelSchema = z.object({
   type: z.enum(["image", "video", "enhance"]),
   provider: z.string().min(1),
   creditCost: z.number().int().min(1),
-  config: z.record(z.any()).optional().default({}),
+  config: z.record(z.string(), z.any()).optional().default({}),
   active: z.boolean().optional().default(true),
 });
 
@@ -19,7 +19,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = modelSchema.parse(body);
 
-    const model = await prisma.modelConfig.create({ data });
+    const model = await prisma.modelConfig.create({
+      data: {
+        ...data,
+        config: data.config as any,
+      },
+    });
 
     return NextResponse.json({ success: true, data: model });
   } catch (error) {
@@ -30,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ success: false, error: error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ success: false, error: error.issues[0].message }, { status: 400 });
     }
     console.error("Admin create model error:", error);
     return NextResponse.json({ success: false, error: "Failed to create model" }, { status: 500 });

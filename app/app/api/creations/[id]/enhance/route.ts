@@ -113,7 +113,7 @@ export async function POST(
               status: "completed",
               resultUrl: result.data.enhanced_image_url || null,
               metadata: {
-                ...enhancement.metadata,
+                ...(enhancement.metadata as any),
                 inferenceResponse: result,
               },
             },
@@ -124,7 +124,7 @@ export async function POST(
             data: {
               status: "failed",
               metadata: {
-                ...enhancement.metadata,
+                ...(enhancement.metadata as any),
                 error: result.error || "Enhancement failed",
               },
             },
@@ -154,7 +154,7 @@ export async function POST(
           data: {
             status: "failed",
             metadata: {
-              ...enhancement.metadata,
+              ...(enhancement.metadata as any),
               error: error instanceof Error ? error.message : "Unknown error",
             },
           },
@@ -194,7 +194,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: error.errors[0].message },
+        { success: false, error: error.issues[0].message },
         { status: 400 }
       );
     }

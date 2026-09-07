@@ -15,6 +15,7 @@
   --theme-danger: #ef4444;
   --theme-success: #22c55e;
   --theme-warning: #f59e0b;
+  --theme-info: #3b82f6;
   --theme-surface: #14141f;
   --theme-surface-hover: #1a1a2a;
   --theme-radius: 0.75rem;
@@ -39,6 +40,7 @@
   --color-danger: var(--theme-danger);
   --color-success: var(--theme-success);
   --color-warning: var(--theme-warning);
+  --color-info: var(--theme-info);
   --color-surface: var(--theme-surface);
   --color-surface-hover: var(--theme-surface-hover);
   --color-bg-elevated: var(--theme-bg-elevated);
