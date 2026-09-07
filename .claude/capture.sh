@@ -1,10 +1,11 @@
 #!/bin/bash
 # Capture hook for Claude Code — 8x assignment
 # Captures prompts and responses to .agent-logs/
-# This script is called by hooks in .claude/settings.json
+# Uses exact fields from Claude Code hook JSON:
+#   UserPromptSubmit → .prompt
+#   Stop → .last_assistant_message
 
 # Don't exit on error — we want to log as much as possible
-# set -e
 
 # Determine project root from script location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,17 +22,26 @@ echo "=== $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ) EVENT=$EVENT_TYPE ===" >> "$DEBUG_L
 echo "$INPUT" >> "$DEBUG_LOG"
 echo "" >> "$DEBUG_LOG"
 
-# Try to extract session_id from stdin JSON
+# Extract session_id from stdin JSON
 SESSION_ID=""
 if command -v jq >/dev/null 2>&1; then
-  SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // .sessionId // empty' 2>/dev/null || echo "")
+  SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || echo "")
 fi
 if [ -z "$SESSION_ID" ]; then
   SESSION_ID="unknown"
 fi
 
+SESSION_SHORT="${SESSION_ID:0:8}"
+
+# Find or create the log file for this session
+LOG_FILE=$(ls -t "$LOG_DIR"/????-??-??_??-??-??_"$SESSION_SHORT".md 2>/dev/null | head -n 1)
+
+if [ -z "$LOG_FILE" ]; then
+  LOG_FILE="$LOG_DIR/$(date -u +%Y-%m-%d_%H-%M-%S)_${SESSION_SHORT}.md"
+fi
+
 # State file for this session
-STATE_FILE="$LOG_DIR/.state-${SESSION_ID:0:8}.json"
+STATE_FILE="$LOG_DIR/.state-${SESSION_SHORT}.json"
 
 # Initialize state if needed
 if [ ! -f "$STATE_FILE" ]; then
@@ -45,26 +55,16 @@ FIRST_PROMPT_TIME=$(jq -r '.first_prompt_time // empty' "$STATE_FILE" 2>/dev/nul
 # Current timestamp
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
 
-# Log file for this session
-LOG_FILE="$LOG_DIR/$(date -u +%Y-%m-%d_%H-%M-%S)_${SESSION_ID:0:8}.md"
-
 # --- HANDLE PROMPT EVENT ---
 if [ "$EVENT_TYPE" = "prompt" ]; then
-  # Try to extract prompt text from various possible JSON fields
+  # Extract prompt text from the exact field Claude Code provides
   PROMPT_TEXT=""
   if command -v jq >/dev/null 2>&1; then
-    PROMPT_TEXT=$(echo "$INPUT" | jq -r '
-      .prompt //
-      .tool_input.prompt //
-      .message //
-      .text //
-      .content //
-      empty
-    ' 2>/dev/null || echo "")
+    PROMPT_TEXT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null || echo "")
   fi
 
   if [ -z "$PROMPT_TEXT" ] || [ "$PROMPT_TEXT" = "null" ]; then
-    PROMPT_TEXT="[Prompt text not available in hook data — see hook-debug.log]"
+    PROMPT_TEXT="[Prompt text not available in hook data]"
   fi
 
   COUNT=$((COUNT + 1))
@@ -79,7 +79,7 @@ if [ "$EVENT_TYPE" = "prompt" ]; then
     "$STATE_FILE" > "${STATE_FILE}.tmp" 2>/dev/null && mv "${STATE_FILE}.tmp" "$STATE_FILE" || true
 
   # Create log file with header if this is the first prompt
-  if [ "$COUNT" -eq 1 ]; then
+  if [ "$COUNT" -eq 1 ] || [ ! -f "$LOG_FILE" ]; then
     cat > "$LOG_FILE" <<EOF
 ---
 session_id: $SESSION_ID
@@ -95,7 +95,7 @@ last_prompt_time: $TIMESTAMP
 
 # Session Log - $(date -u +%Y-%m-%d)
 
-Session: \`${SESSION_ID:0:8}\` | Project: \`8x\` | Author: \`sameer\`
+Session: \`${SESSION_SHORT}\` | Project: \`8x\` | Author: \`sameer\`
 
 ---
 
@@ -104,77 +104,38 @@ EOF
 
   # Append prompt entry
   cat >> "$LOG_FILE" <<EOF
-[LOG_ENTRY type=PROMPT num=$COUNT session=${SESSION_ID:0:8}]
+[LOG_ENTRY type=PROMPT num=$COUNT session=${SESSION_SHORT}]
 timestamp: $TIMESTAMP
 model: accounts/fireworks/models/kimi-k2p6
 
 $PROMPT_TEXT
 
 EOF
+
+  # Update header last_prompt_time and total_exchanges
+  if command -v sed >/dev/null 2>&1; then
+    sed -i "s/last_prompt_time: .*/last_prompt_time: $TIMESTAMP/" "$LOG_FILE" 2>/dev/null || true
+    sed -i "s/total_exchanges: .*/total_exchanges: $COUNT/" "$LOG_FILE" 2>/dev/null || true
+  fi
 fi
 
 # --- HANDLE STOP/RESPONSE EVENT ---
 if [ "$EVENT_TYPE" = "stop" ]; then
   COUNT=$(jq -r '.count // 0' "$STATE_FILE" 2>/dev/null || echo "0")
 
-  # Try to get transcript path from stdin
-  TRANSCRIPT_PATH=""
-  if command -v jq >/dev/null 2>&1; then
-    TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // .transcriptPath // empty' 2>/dev/null || echo "")
-  fi
-
+  # Extract the last assistant message from the exact field Claude Code provides
   RESPONSE_TEXT=""
-
-  # If transcript path is provided, try to read it
-  if [ -n "$TRANSCRIPT_PATH" ] && [ "$TRANSCRIPT_PATH" != "null" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-    echo "Found transcript: $TRANSCRIPT_PATH" >> "$DEBUG_LOG"
-    # Read the transcript and try to extract the last assistant response
-    # This is a best-effort attempt — transcript format may vary
-    RESPONSE_TEXT=$(cat "$TRANSCRIPT_PATH" 2>/dev/null | tail -n 200 || echo "")
-  fi
-
-  # If no transcript or couldn't read it, try to get response from stdin directly
-  if [ -z "$RESPONSE_TEXT" ]; then
-    if command -v jq >/dev/null 2>&1; then
-      RESPONSE_TEXT=$(echo "$INPUT" | jq -r '.response // .text // .content // empty' 2>/dev/null || echo "")
-    fi
+  if command -v jq >/dev/null 2>&1; then
+    RESPONSE_TEXT=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null || echo "")
   fi
 
   if [ -z "$RESPONSE_TEXT" ] || [ "$RESPONSE_TEXT" = "null" ]; then
-    RESPONSE_TEXT="[Response text not captured — see hook-debug.log for raw hook data]"
-  fi
-
-  # Find the most recent log file for this session
-  LOG_FILE=$(ls -t "$LOG_DIR"/*.md 2>/dev/null | grep "${SESSION_ID:0:8}" | head -n 1)
-
-  # If no log file exists yet, create one (can happen if Stop fires before any prompt)
-  if [ -z "$LOG_FILE" ]; then
-    LOG_FILE="$LOG_DIR/$(date -u +%Y-%m-%d_%H-%M-%S)_${SESSION_ID:0:8}.md"
-    cat > "$LOG_FILE" <<EOF
----
-session_id: $SESSION_ID
-date: $(date -u +%Y-%m-%d)
-author: sameer
-model: accounts/fireworks/models/kimi-k2p6
-tool: claude-code
-project: 8x
-total_exchanges: 0
-first_prompt_time: $TIMESTAMP
-last_prompt_time: $TIMESTAMP
----
-
-# Session Log - $(date -u +%Y-%m-%d)
-
-Session: \`${SESSION_ID:0:8}\` | Project: \`8x\` | Author: \`sameer\`
-
----
-
-EOF
+    RESPONSE_TEXT="[Response text not available in hook data]"
   fi
 
   # Append response entry
   cat >> "$LOG_FILE" <<EOF
-[LOG_ENTRY type=RESPONSE num=$COUNT session=${SESSION_ID:0:8}]
+[LOG_ENTRY type=RESPONSE num=$COUNT session=${SESSION_SHORT}]
 timestamp: $TIMESTAMP
 model: accounts/fireworks/models/kimi-k2p6
 
