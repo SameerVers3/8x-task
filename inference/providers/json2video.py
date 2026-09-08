@@ -172,5 +172,6 @@ class JSON2VideoProvider(BaseProvider):
             "Accept": "application/json",
         }
         if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
             headers["X-API-Key"] = api_key
         return headers
