@@ -40,7 +40,7 @@ async def root():
             "models": "/inference/models",
             "providers": "/inference/providers",
             "image": "POST /inference/image?model=flux",
-            "video": "POST /inference/video?model=<future>",
+            "video": "POST /inference/video?model=json2video",
             "text": "POST /inference/text?model=<future>",
             "enhance": "POST /inference/enhance?model=<future>",
         },

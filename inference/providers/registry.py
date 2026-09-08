@@ -85,10 +85,12 @@ class ProviderRegistry:
         This scans all modules in the providers package for concrete provider classes.
         """
         import providers.pollinations as pollinations
+        import providers.json2video as json2video
 
         # Register known providers explicitly
         # In the future, this can scan all submodules dynamically
         self.register(pollinations.PollinationsProvider)
+        self.register(json2video.JSON2VideoProvider)
 
         # TODO: Dynamic scanning
         # for importer, modname, ispkg in pkgutil.iter_modules(providers.__path__):

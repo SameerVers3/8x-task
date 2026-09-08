@@ -26,6 +26,7 @@ class TestInferenceRelay:
         """Relay should auto-discover providers on init."""
         providers = relay.list_providers()
         assert "PollinationsProvider" in providers
+        assert "JSON2VideoProvider" in providers
 
     def test_list_models(self, relay):
         """Should list all available models."""
@@ -33,12 +34,17 @@ class TestInferenceRelay:
         assert "image/flux" in models
         assert "image/turbo" in models
         assert "image/any-dark" in models
+        assert "video/json2video" in models
 
     def test_list_models_filtered(self, relay):
         """Should filter models by task type."""
         image_models = relay.list_models(task_type="image")
         assert all(m.startswith("image/") for m in image_models)
         assert len(image_models) == 3
+
+        video_models = relay.list_models(task_type="video")
+        assert all(m.startswith("video/") for m in video_models)
+        assert len(video_models) == 1
 
     def test_resolve_model_with_explicit(self, relay):
         """Should use the explicitly provided model."""
@@ -50,10 +56,15 @@ class TestInferenceRelay:
         model = relay._resolve_model("image", None)
         assert model == "flux"
 
+    def test_resolve_model_default_video(self, relay):
+        """Should fall back to default video model when none provided."""
+        model = relay._resolve_model("video", None)
+        assert model == "json2video"
+
     def test_resolve_model_no_default(self, relay):
         """Should raise error when no model and no default configured."""
         with pytest.raises(ProviderNotFoundError):
-            relay._resolve_model("video", None)
+            relay._resolve_model("text", None)
 
     def test_get_provider_info_found(self, relay):
         """Should return provider info for a valid model."""
@@ -61,6 +72,13 @@ class TestInferenceRelay:
         assert info["model"] == "flux"
         assert info["task_type"] == "image"
         assert info["provider_class"] == "PollinationsProvider"
+
+    def test_get_provider_info_video_found(self, relay):
+        """Should return provider info for a valid video model."""
+        info = relay.get_provider_info("video", "json2video")
+        assert info["model"] == "json2video"
+        assert info["task_type"] == "video"
+        assert info["provider_class"] == "JSON2VideoProvider"
 
     def test_get_provider_info_not_found(self, relay):
         """Should return error info for invalid model."""

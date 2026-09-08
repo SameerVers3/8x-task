@@ -22,9 +22,13 @@ class Settings(BaseSettings):
     POLLINATIONS_BASE_URL: str = "https://image.pollinations.ai"
     POLLINATIONS_API_KEY: str | None = None
 
+    # JSON2Video settings
+    JSON2VIDEO_BASE_URL: str = "https://api.json2video.com/v1"
+    JSON2VIDEO_API_KEY: str | None = None
+
     # Default models
     DEFAULT_IMAGE_MODEL: str = "flux"
-    DEFAULT_VIDEO_MODEL: str | None = None
+    DEFAULT_VIDEO_MODEL: str = "json2video"
     DEFAULT_TEXT_MODEL: str | None = None
     DEFAULT_ENHANCE_MODEL: str | None = None
 

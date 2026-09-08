@@ -1,6 +1,6 @@
 """Request models for inference tasks."""
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional
 
 
@@ -30,20 +30,39 @@ class ImageGenerationRequest(BaseInferenceRequest):
 
 
 class VideoGenerationRequest(BaseInferenceRequest):
-    """Request model for video generation (placeholder for future)."""
+    """Request model for video generation.
 
-    prompt: str = Field(..., min_length=1, max_length=10000, description="Text prompt describing the desired video")
+    Supports two modes:
+    - Simple mode: provide a text prompt and basic parameters
+    - Advanced mode: provide a full JSON scene definition via the `json` field
+    """
+
+    model_config = {"populate_by_name": True}
+
+    prompt: str = Field(default="", max_length=10000, description="Text prompt describing the desired video")
     duration: Optional[int] = Field(default=5, ge=1, le=60, description="Video duration in seconds")
     width: Optional[int] = Field(default=512, ge=64, le=4096, description="Video width in pixels")
     height: Optional[int] = Field(default=512, ge=64, le=4096, description="Video height in pixels")
     fps: Optional[int] = Field(default=24, ge=1, le=60, description="Frames per second")
+    definition: Optional[dict] = Field(
+        default=None,
+        alias="json",
+        description="Advanced JSON scene definition (scenes, elements, transitions). When provided, this overrides simple prompt mode.",
+    )
 
     @field_validator("prompt")
     @classmethod
     def validate_prompt_not_empty(cls, v: str) -> str:
-        if not v.strip():
+        if v and not v.strip():
             raise ValueError("Prompt cannot be empty or whitespace only")
         return v.strip()
+
+    @model_validator(mode="after")
+    def validate_json_or_prompt(self) -> "VideoGenerationRequest":
+        """Ensure either prompt or json is provided."""
+        if not self.definition and not self.prompt:
+            raise ValueError("Either 'prompt' or 'json' field must be provided")
+        return self
 
 
 class TextGenerationRequest(BaseInferenceRequest):

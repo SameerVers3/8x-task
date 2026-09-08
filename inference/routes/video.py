@@ -17,13 +17,30 @@ async def generate_video(
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
 ):
     """
-    Generate a video from a text prompt (placeholder — no providers registered yet).
+    Generate a video from a text prompt or JSON scene definition.
 
-    **Request Body:**
+    Supports two modes:
+
+    **Simple mode — text prompt:**
     ```json
     {
       "prompt": "a cat walking in space",
       "duration": 5,
+      "width": 512,
+      "height": 512,
+      "fps": 24
+    }
+    ```
+
+    **Advanced mode — JSON scene definition:**
+    ```json
+    {
+      "json": {
+        "scenes": [
+          { "text": "Hello world", "duration": 3 },
+          { "image": "https://example.com/image.jpg", "duration": 5 }
+        ]
+      },
       "width": 512,
       "height": 512,
       "fps": 24
