@@ -130,13 +130,11 @@ class TestJSON2VideoProvider:
 
     def test_get_headers_no_key(self, provider):
         headers = provider.get_headers()
-        assert "Authorization" not in headers
-        assert "X-API-Key" not in headers
+        assert "x-api-key" not in headers
 
     def test_get_headers_with_key(self, provider):
         headers = provider.get_headers("secret-key")
-        assert headers["Authorization"] == "Bearer secret-key"
-        assert headers["X-API-Key"] == "secret-key"
+        assert headers["x-api-key"] == "secret-key"
 
     @pytest.mark.asyncio
     async def test_generate_no_api_key(self, provider):
