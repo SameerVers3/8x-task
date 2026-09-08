@@ -15,6 +15,8 @@ import {
   Home,
   CreditCard,
   Wand2,
+  Sparkles,
+  Receipt,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
@@ -23,7 +25,9 @@ import { Sidebar } from "./sidebar";
 const navLinks = [
   { href: "/", label: "nav.home", icon: Home },
   { href: "/generate", label: "nav.generate", icon: Wand2 },
+  { href: "/gallery", label: "nav.gallery", icon: Sparkles },
   { href: "/history", label: "nav.history", icon: History, auth: true },
+  { href: "/billing", label: "nav.billing", icon: Receipt, auth: true },
   { href: "/pricing", label: "nav.pricing", icon: CreditCard },
 ];
 

@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.githubusercontent.com" },
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "cdn.dribbble.com" },
+      ...(process.env.R2_PUBLIC_URL
+        ? [{ protocol: "https" as const, hostname: new URL(process.env.R2_PUBLIC_URL).hostname }]
+        : []),
     ],
   },
 };

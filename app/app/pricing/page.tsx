@@ -19,9 +19,12 @@ import {
   Star,
   CreditCard,
   ArrowUpRight,
+  Loader2,
+  LogIn,
 } from "lucide-react";
 import { AppShell } from "../components/app-shell";
 import { useLanguage } from "@/providers/language-provider";
+import { useAuth } from "@/providers/auth-provider";
 
 const plans = [
   {
@@ -57,6 +60,7 @@ const plans = [
       "No watermark",
     ],
     cta: "Start Creating",
+    planId: "plan_creator",
     href: "/generate",
     popular: true,
   },
@@ -77,6 +81,7 @@ const plans = [
       "Team collaboration",
     ],
     cta: "Go Pro",
+    planId: "plan_pro",
     href: "/generate",
     popular: false,
   },
@@ -103,10 +108,10 @@ const plans = [
 ];
 
 const creditsPackages = [
-  { credits: 100, price: 5, perCredit: "0.05" },
-  { credits: 500, price: 20, perCredit: "0.04", badge: "Popular" },
-  { credits: 2000, price: 60, perCredit: "0.03", badge: "Best value" },
-  { credits: 5000, price: 125, perCredit: "0.025" },
+  { id: "credits_100", credits: 100, price: 5, perCredit: "0.05" },
+  { id: "credits_500", credits: 500, price: 20, perCredit: "0.04", badge: "Popular" },
+  { id: "credits_2000", credits: 2000, price: 60, perCredit: "0.03", badge: "Best value" },
+  { id: "credits_5000", credits: 5000, price: 125, perCredit: "0.025" },
 ];
 
 const trustItems = [
@@ -182,8 +187,40 @@ function BillingToggle({
 
 export default function PricingPage() {
   const { t } = useLanguage();
+  const { user, setIsAuthModalOpen } = useAuth();
   const [yearly, setYearly] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (type: "credit_pack" | "subscription", planId: string) => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setCheckoutLoading(planId);
+    try {
+      const res = await fetch("/api/checkout/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          type,
+          planId,
+          billingPeriod: yearly ? "yearly" : "monthly",
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.sessionUrl) {
+        window.location.href = data.data.sessionUrl;
+      } else {
+        alert(data.error || "Failed to start checkout");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   return (
     <AppShell>
@@ -323,18 +360,38 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <Link
-                  href={plan.href}
-                  className={`mt-7 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all hover:-translate-y-px active:scale-[0.98] ${
-                    isPopular
-                      ? "text-[var(--bg-void)] shadow-lg"
-                      : "border border-[var(--border-subtle)] text-[var(--text-primary)] hover:bg-[var(--glass-fill-hover)]"
-                  }`}
-                  style={isPopular ? { background: "var(--accent-gradient)" } : {}}
-                >
-                  {plan.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                {plan.name === "Starter" || plan.name === "Enterprise" ? (
+                  <Link
+                    href={plan.href}
+                    className={`mt-7 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all hover:-translate-y-px active:scale-[0.98] ${
+                      isPopular
+                        ? "text-[var(--bg-void)] shadow-lg"
+                        : "border border-[var(--border-subtle)] text-[var(--text-primary)] hover:bg-[var(--glass-fill-hover)]"
+                    }`}
+                    style={isPopular ? { background: "var(--accent-gradient)" } : {}}
+                  >
+                    {plan.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => handleCheckout("subscription", plan.planId!)}
+                    disabled={checkoutLoading === plan.planId}
+                    className={`mt-7 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all hover:-translate-y-px active:scale-[0.98] disabled:opacity-60 ${
+                      isPopular
+                        ? "text-[var(--bg-void)] shadow-lg"
+                        : "border border-[var(--border-subtle)] text-[var(--text-primary)] hover:bg-[var(--glass-fill-hover)]"
+                    }`}
+                    style={isPopular ? { background: "var(--accent-gradient)" } : {}}
+                  >
+                    {checkoutLoading === plan.planId ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4" />
+                    )}
+                    {checkoutLoading === plan.planId ? "Loading..." : plan.cta}
+                  </button>
+                )}
               </motion.div>
             );
           })}
@@ -389,8 +446,19 @@ export default function PricingPage() {
                 <p className="text-xs text-[var(--text-tertiary)]">credits</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--text-primary)]">${pkg.price}</p>
                 <p className="text-xs text-[var(--text-tertiary)]">${pkg.perCredit}/credit</p>
-                <button className="mt-4 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--glass-fill)] py-2.5 text-sm font-medium text-[var(--text-primary)] transition-all hover:bg-[var(--accent-solid)] hover:text-white hover:border-[var(--accent-solid)]">
-                  Buy Now
+                <button
+                  onClick={() => handleCheckout("credit_pack", pkg.id)}
+                  disabled={checkoutLoading === pkg.id}
+                  className="mt-4 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--glass-fill)] py-2.5 text-sm font-medium text-[var(--text-primary)] transition-all hover:bg-[var(--accent-solid)] hover:text-white hover:border-[var(--accent-solid)] disabled:opacity-60"
+                >
+                  {checkoutLoading === pkg.id ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading...
+                    </span>
+                  ) : (
+                    "Buy Now"
+                  )}
                 </button>
               </motion.div>
             ))}

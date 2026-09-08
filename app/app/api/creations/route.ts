@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/config/database";
 import { requireAuth } from "@/lib/auth";
 import { generateImage, generateVideo } from "@/config/inference";
+import { fetchAndUploadToR2, generateR2Key, isR2Configured } from "@/lib/storage";
 import { z } from "zod";
 
 const createCreationSchema = z.object({
@@ -124,11 +125,24 @@ export async function POST(req: NextRequest) {
         }
 
         if (result.success && result.data) {
+          let resultUrl = result.data.image_url || result.data.video_url || null;
+
+          // Upload to R2 for permanent storage
+          if (resultUrl && isR2Configured()) {
+            try {
+              const r2Key = generateR2Key(userId, creation.id, model.type);
+              resultUrl = await fetchAndUploadToR2(resultUrl, r2Key);
+            } catch (r2Error) {
+              console.error("R2 upload failed, keeping inference URL:", r2Error);
+              // Fallback: keep the inference URL
+            }
+          }
+
           await prisma.creation.update({
             where: { id: creation.id },
             data: {
               status: "completed",
-              resultUrl: result.data.image_url || result.data.video_url || null,
+              resultUrl,
               metadata: {
                 ...(creation.metadata as any),
                 inferenceResponse: result,

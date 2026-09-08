@@ -23,6 +23,8 @@ model User {
   creations          Creation[]
   creditTransactions CreditTransaction[]
   otps               OTP[]
+  stripeCustomer     StripeCustomer?
+  paymentRecords     PaymentRecord[]
 
   @@map("users")
 }
@@ -180,4 +182,36 @@ model GlobalConfig {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("global_config")
+}
+
+model StripeCustomer {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  stripeCustomerId String   @unique @map("stripe_customer_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("stripe_customers")
+}
+
+model PaymentRecord {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  stripeSessionId String?  @unique @map("stripe_session_id")
+  stripePaymentId String?  @unique @map("stripe_payment_id")
+  stripeInvoiceId String?  @unique @map("stripe_invoice_id")
+  type            String   // "credit_pack" | "subscription"
+  credits         Int      // credits added
+  amount          Int      // amount in cents
+  currency        String   @default("usd")
+  status          String   @default("pending") // "pending" | "completed" | "failed" | "refunded"
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripeSessionId])
+  @@map("payment_records")
 }
