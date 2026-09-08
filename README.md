@@ -4,6 +4,9 @@ Two services: a Next.js web app and a Python inference relay. The app handles us
 
 ---
 
+<img width="1485" height="653" alt="image" src="https://github.com/user-attachments/assets/e76992f1-510a-4c61-9982-6d90091ad8c2" />
+
+
 ## `app/` — Next.js Application
 
 **What it does:**
