@@ -136,6 +136,31 @@ async function main() {
       description TEXT,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
+
+    `CREATE TABLE IF NOT EXISTS stripe_customers (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      stripe_customer_id TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS payment_records (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      stripe_session_id TEXT UNIQUE,
+      stripe_payment_id TEXT UNIQUE,
+      stripe_invoice_id TEXT UNIQUE,
+      type TEXT NOT NULL,
+      credits INTEGER NOT NULL,
+      amount INTEGER NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'usd',
+      status TEXT NOT NULL DEFAULT 'pending',
+      metadata JSONB NOT NULL DEFAULT '{}',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE INDEX IF NOT EXISTS idx_payment_records_user_id ON payment_records(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_payment_records_stripe_session_id ON payment_records(stripe_session_id)`,
   ];
 
   for (const sql of tables) {
