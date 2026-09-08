@@ -1,5 +1,5 @@
 const INFERENCE_BASE_URL =
-  process.env.INFERENCE_API_URL || "http://localhost:8000";
+  (process.env.INFERENCE_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 export async function generateImage(payload: {
   prompt: string;
@@ -10,7 +10,9 @@ export async function generateImage(payload: {
   nologo?: boolean;
   model?: string;
 }) {
-  const response = await fetch(`${INFERENCE_BASE_URL}/inference/image`, {
+  const url = `${INFERENCE_BASE_URL}/inference/image`;
+  console.log("[Inference] generateImage URL:", url, "base:", INFERENCE_BASE_URL, "env:", process.env.INFERENCE_API_URL);
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,6 +22,7 @@ export async function generateImage(payload: {
     },
     body: JSON.stringify(payload),
   });
+  console.log("[Inference] generateImage status:", response.status, response.statusText, "ok:", response.ok);
 
   if (!response.ok) {
     throw new Error(`Inference API error: ${response.statusText}`);
@@ -36,7 +39,9 @@ export async function generateVideo(payload: {
   fps?: number;
   model?: string;
 }) {
-  const response = await fetch(`${INFERENCE_BASE_URL}/inference/video`, {
+  const url = `${INFERENCE_BASE_URL}/inference/video`;
+  console.log("[Inference] generateVideo URL:", url, "base:", INFERENCE_BASE_URL);
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -46,6 +51,7 @@ export async function generateVideo(payload: {
     },
     body: JSON.stringify(payload),
   });
+  console.log("[Inference] generateVideo status:", response.status, response.statusText, "ok:", response.ok);
 
   if (!response.ok) {
     throw new Error(`Inference API error: ${response.statusText}`);
